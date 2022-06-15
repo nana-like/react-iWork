@@ -1,4 +1,5 @@
 import React from 'react';
+import './App.css';
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
 function App() {
@@ -6,13 +7,29 @@ function App() {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Droppable droppableId="one">
-        {() => (
-          <ul>
+        {(provided) => (
+          <ul ref={provided.innerRef} {...provided.droppableProps}>
             <Draggable draggableId="first" index={0}>
-              {() => <li>First</li>}
+              {(provided) => (
+                <li
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                >
+                  First
+                </li>
+              )}
             </Draggable>
             <Draggable draggableId="second" index={1}>
-              {() => <li>Second</li>}
+              {(provided) => (
+                <li
+                  ref={provided.innerRef}
+                  {...provided.draggableProps}
+                  {...provided.dragHandleProps}
+                >
+                  Second
+                </li>
+              )}
             </Draggable>
           </ul>
         )}
