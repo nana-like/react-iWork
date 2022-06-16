@@ -7,15 +7,32 @@ import { toDoState } from './atoms';
 
 function App() {
   const [toDos, setToDos] = useRecoilState(toDoState);
-  const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+  const onDragEnd = ({ destination, source, draggableId }: any) => {
     if (!destination) return;
-
-    // setToDos((oldToDos): string[] => {
-    //   const toDosCopy = [...oldToDos];
-    //   toDosCopy.splice(source.index, 1);
-    //   toDosCopy.splice(destination?.index, 0, draggableId);
-    //   return toDosCopy;
-    // });
+    if (destination?.droppableId === source.droppableId) {
+      setToDos((allBoards): any => {
+        const boardCopy = [...allBoards[source.droppableId]];
+        boardCopy.splice(source.index, 1);
+        boardCopy.splice(destination?.index, 0, draggableId);
+        return {
+          ...allBoards,
+          [source.droppableId]: boardCopy
+        };
+      });
+    }
+    if (destination?.droppableId !== source.droppableId) {
+      setToDos((allBaords): any => {
+        const sourceBoard = [...allBaords[source.droppableId]];
+        const destinationBoard = [...allBaords[destination.droppableId]];
+        sourceBoard.splice(source.index, 1);
+        destinationBoard.splice(destination?.index, 0, draggableId);
+        return {
+          ...allBaords,
+          [source.droppableId]: sourceBoard,
+          [destination.droppableId]: destinationBoard
+        };
+      });
+    }
   };
   return (
     <DragDropContext onDragEnd={onDragEnd}>
