@@ -25,7 +25,6 @@ const DraggableCard = ({ toDo, index }: DragabbleCardProps) => {
 };
 
 export default React.memo(DraggableCard);
-// export default DraggableCard;
 
 const Card = styled.li`
   border-radius: 0.5rem;
