@@ -1,11 +1,22 @@
 import React from 'react';
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
-
-const toDos = ['a', 'b', 'c', 'd', 'e', 'f'];
+import DraggableCard from './@component/DraggableCard';
+import { toDoState } from './atoms';
 
 function App() {
-  const onDragEnd = () => {};
+  const [toDos, setToDos] = useRecoilState(toDoState);
+  const onDragEnd = ({ draggableId, destination, source }: DropResult) => {
+    if (!destination) return;
+
+    setToDos((oldToDos): string[] => {
+      const toDosCopy = [...oldToDos];
+      toDosCopy.splice(source.index, 1);
+      toDosCopy.splice(destination?.index, 0, draggableId);
+      return toDosCopy;
+    });
+  };
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <Wrapper>
@@ -14,17 +25,7 @@ function App() {
             {(provided) => (
               <Board ref={provided.innerRef} {...provided.droppableProps}>
                 {toDos.map((toDo, index) => (
-                  <Draggable draggableId={toDo} index={index} key={toDo}>
-                    {(provided) => (
-                      <Card
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        {toDo}
-                      </Card>
-                    )}
-                  </Draggable>
+                  <DraggableCard index={index} key={toDo} toDo={toDo} />
                 ))}
                 {provided.placeholder}
               </Board>
@@ -57,16 +58,4 @@ const Board = styled.ul`
   padding-top: 3rem;
   background-color: ${(props) => props.theme.boardColor};
   border-radius: 0.5rem;
-`;
-
-const Card = styled.li`
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
-  padding: 1rem;
-  background-color: ${(props) => props.theme.cardColor};
-
-  &:hover,
-  &:active {
-    color: red;
-  }
 `;
