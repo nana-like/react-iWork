@@ -3,14 +3,14 @@ import { Draggable } from 'react-beautiful-dnd';
 import styled from 'styled-components';
 
 interface DragabbleCardProps {
-  toDo: string;
+  id: number;
+  text: string;
   index: number;
 }
 
-const DraggableCard = ({ toDo, index }: DragabbleCardProps) => {
-  console.log(`${toDo} has been rendered.`);
+const DraggableCard = ({ id, text, index }: DragabbleCardProps) => {
   return (
-    <Draggable draggableId={toDo} index={index}>
+    <Draggable draggableId={`${id}`} index={index}>
       {(provided, snapshot) => (
         <Card
           ref={provided.innerRef}
@@ -18,7 +18,7 @@ const DraggableCard = ({ toDo, index }: DragabbleCardProps) => {
           {...provided.dragHandleProps}
           isDragging={snapshot.isDragging}
         >
-          {toDo}
+          {text}
         </Card>
       )}
     </Draggable>

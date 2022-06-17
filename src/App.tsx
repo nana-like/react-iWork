@@ -10,10 +10,11 @@ function App() {
   const onDragEnd = ({ destination, source, draggableId }: any) => {
     if (!destination) return;
     if (destination?.droppableId === source.droppableId) {
-      setToDos((allBoards): any => {
+      setToDos((allBoards) => {
         const boardCopy = [...allBoards[source.droppableId]];
+        const taskObj = boardCopy[source.index]; //object를 변형시키기 전에 원하는 참조값을 복사한다
         boardCopy.splice(source.index, 1);
-        boardCopy.splice(destination?.index, 0, draggableId);
+        boardCopy.splice(destination?.index, 0, taskObj);
         return {
           ...allBoards,
           [source.droppableId]: boardCopy
@@ -21,11 +22,12 @@ function App() {
       });
     }
     if (destination?.droppableId !== source.droppableId) {
-      setToDos((allBaords): any => {
+      setToDos((allBaords) => {
         const sourceBoard = [...allBaords[source.droppableId]];
         const destinationBoard = [...allBaords[destination.droppableId]];
+        const taskObj = sourceBoard[source.index];
         sourceBoard.splice(source.index, 1);
-        destinationBoard.splice(destination?.index, 0, draggableId);
+        destinationBoard.splice(destination?.index, 0, taskObj);
         return {
           ...allBaords,
           [source.droppableId]: sourceBoard,
