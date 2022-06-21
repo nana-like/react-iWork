@@ -7,7 +7,7 @@ import ToDoCard from './ToDoCard';
 
 const Board = ({ id, board }: any) => {
   const [boards, setBoards] = useRecoilState(BoardState);
-  const [toDos, setTodos] = useRecoilState(toDoState);
+  const [toDos, setToDos] = useRecoilState(toDoState);
   const [boardName, setBoardName] = useState(board);
   const { register, setValue, handleSubmit } = useForm();
   useEffect(() => {
@@ -20,6 +20,13 @@ const Board = ({ id, board }: any) => {
       newBoards.splice(id, 1, boardName); //board state가 변경됨
       return newBoards;
     });
+    setToDos((oldToDos: any) => {
+      const oldToDo = [...oldToDos[board]];
+      return {
+        ...oldToDos,
+        [boardName]: oldToDo
+      };
+    });
   };
 
   const handleBoardDelete = () => {
@@ -28,11 +35,12 @@ const Board = ({ id, board }: any) => {
       newBoards.splice(id, 1);
       return newBoards;
     });
+    console.log(toDos);
   };
 
   const handleNewToDo = ({ toDo }: any) => {
     console.log(toDo);
-    setTodos((oldToDos) => {
+    setToDos((oldToDos) => {
       const newToDo = {
         id: Date.now(),
         text: toDo
@@ -87,7 +95,7 @@ const Board = ({ id, board }: any) => {
       <div>
         {/* 보드 내 투두 목록 */}
         {toDos[board]?.map((toDo) => (
-          <ToDoCard key={toDo.id} id={toDo.id} text={toDo.text} />
+          <ToDoCard key={toDo.id} board={board} id={toDo.id} text={toDo.text} />
         ))}
       </div>
     </Wrapper>

@@ -5,15 +5,28 @@ import Board from './@component/Board';
 import { BoardState, toDoState } from './@core/recoil/atoms';
 
 function App() {
-  const { register, setValue, handleSubmit } = useForm();
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    setError,
+    formState: { errors }
+  } = useForm();
   const [boards, setBoards] = useRecoilState(BoardState);
-  const [toDos, setTodos] = useRecoilState(toDoState);
+  const [toDos, setToDos] = useRecoilState(toDoState);
   const handleBoards = ({ board }: any) => {
+    // if (board) {
+    //   setError(
+    //     'board',
+    //     { message: '이미 존재하는 보드명입니다.' },
+    //     { shouldFocus: true }
+    //   );
+    // }
     setBoards((oldBoards) => {
       const newBoards = [...oldBoards, board];
       return newBoards;
     });
-    setTodos((oldToDos: any) => {
+    setToDos((oldToDos: any) => {
       return {
         ...oldToDos,
         [board]: []
@@ -29,10 +42,15 @@ function App() {
       <h2>Create a board</h2>
       <form onSubmit={handleSubmit(handleBoards)}>
         <input
-          {...register('board', { required: true })}
+          {...register('board', {
+            required: true,
+            validate: (value) =>
+              !boards.some((board) => board.includes(value)) || '중복입니당'
+          })}
           type="text"
           placeholder="New Board"
         />
+        <p style={{ color: 'red' }}>{errors?.board?.message}</p>
         <button type="submit">+ New</button>
       </form>
       <div>
