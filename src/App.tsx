@@ -9,19 +9,11 @@ function App() {
     register,
     setValue,
     handleSubmit,
-    setError,
     formState: { errors }
   } = useForm();
   const [boards, setBoards] = useRecoilState(BoardState);
   const [toDos, setToDos] = useRecoilState(toDoState);
   const handleBoards = ({ board }: any) => {
-    // if (board) {
-    //   setError(
-    //     'board',
-    //     { message: '이미 존재하는 보드명입니다.' },
-    //     { shouldFocus: true }
-    //   );
-    // }
     setBoards((oldBoards) => {
       const newBoards = [...oldBoards, board];
       return newBoards;
@@ -43,9 +35,8 @@ function App() {
       <form onSubmit={handleSubmit(handleBoards)}>
         <input
           {...register('board', {
-            required: true,
-            validate: (value) =>
-              !boards.some((board) => board.includes(value)) || '중복입니당'
+            required: '입력하세용',
+            validate: (value) => !boards.some((board) => board === value) || '중복입니당'
           })}
           type="text"
           placeholder="New Board"

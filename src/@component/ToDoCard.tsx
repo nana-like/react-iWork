@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
 import { IToDo, toDoState } from '../@core/recoil/atoms';
@@ -6,8 +7,15 @@ import { IToDo, toDoState } from '../@core/recoil/atoms';
 const ToDoCard = ({ board, id, text }: any) => {
   const [toDos, setToDos] = useRecoilState(toDoState);
   const [toDoText, setToDoText] = useState(text);
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors }
+  } = useForm();
 
   const handleToDoText = () => {
+    if (!toDoText) return;
     setToDos((oldToDos: any) => {
       const newToDos = [...oldToDos[board]];
       const targetId = newToDos.findIndex((newTodo) => newTodo.id === id);
@@ -48,8 +56,14 @@ const ToDoCard = ({ board, id, text }: any) => {
           onChange={(e) => {
             setToDoText(e.currentTarget.value);
           }}
+          onKeyPress={(e) => {
+            if (e.key === 'Enter') {
+              handleToDoText();
+            }
+          }}
           value={toDoText}
         />
+        <p style={{ color: 'red' }}>{errors?.newToDo?.message}</p>
         <button type="button" onClick={handleToDoText}>
           Done
         </button>

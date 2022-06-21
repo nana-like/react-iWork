@@ -4,26 +4,42 @@ import { BoardState, toDoState } from '../@core/recoil/atoms';
 import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
 import ToDoCard from './ToDoCard';
+import { IToDoState } from './../@core/recoil/atoms';
 
 const Board = ({ id, board }: any) => {
   const [boards, setBoards] = useRecoilState(BoardState);
   const [toDos, setToDos] = useRecoilState(toDoState);
   const [boardName, setBoardName] = useState(board);
-  const { register, setValue, handleSubmit } = useForm();
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors }
+  } = useForm();
+  const {
+    register: boardNameRegister,
+    handleSubmit: boardNameSubmit,
+    formState: { errors: boardNameErrors }
+  } = useForm();
   useEffect(() => {
     setBoardName(board);
   }, [board]);
 
   const handleBoardName = () => {
+    if (!boardName) return;
+    if (board === boardName) return;
     setBoards((oldBoards) => {
       const newBoards = [...oldBoards];
       newBoards.splice(id, 1, boardName); //board state가 변경됨
       return newBoards;
     });
     setToDos((oldToDos: any) => {
+      console.log('이름이 바뀌었어!');
+      const copied = { ...oldToDos };
+      delete copied[board];
       const oldToDo = [...oldToDos[board]];
       return {
-        ...oldToDos,
+        ...copied,
         [boardName]: oldToDo
       };
     });
@@ -35,11 +51,33 @@ const Board = ({ id, board }: any) => {
       newBoards.splice(id, 1);
       return newBoards;
     });
-    console.log(toDos);
+    setToDos((oldToDos: any) => {
+      // 해당하지 "않는" 투두들만 남기고 싶은데 어렵...
+
+      // Convert `obj` to a key/value array
+      // `[['name', 'Luke Skywalker'], ['title', 'Jedi Knight'], ...]`
+      // const asArray = Object.entries(oldToDos);
+
+      // const filtered = asArray.filter(([key, value]) => key !== board);
+
+      // // Convert the key/value array back to an object:
+      // // `{ name: 'Luke Skywalker', title: 'Jedi Knight' }`
+      // const justStrings = Object.fromEntries(filtered);
+      // console.log(filtered);
+      // console.log(justStrings);
+
+      // return justStrings;
+
+      const copied = { ...oldToDos };
+      delete copied[board];
+      return {
+        ...copied
+      };
+    });
   };
 
   const handleNewToDo = ({ toDo }: any) => {
-    console.log(toDo);
+    if (!toDo) return;
     setToDos((oldToDos) => {
       const newToDo = {
         id: Date.now(),
@@ -68,26 +106,45 @@ const Board = ({ id, board }: any) => {
         ❌
       </button>
 
-      <div>
+      <form onSubmit={boardNameSubmit(handleBoardName)}>
         {/* 보드 이름 변경 */}
         <input
+          {...boardNameRegister('newBoardName', {
+            validate: (value) => {
+              // boards 중에 지금 입력한 이름과 같은 게 있는지 판단
+              if (boards.some((current) => current === boardName)) {
+                // console.log('value: ', value);
+                // console.log('boardName: ', boardName);
+                // console.log(value === boardName);
+                // if (value === boardName) {
+                //   // 단, 자신의 기존 이름과 동일한 걸 쳤다면 오케이 (다른 거 쳤다가 돌아오고 싶을 때)
+                //   return true;
+                // }
+                return '새로운 이름을 입력하세요.';
+              }
+            }
+          })}
           type="text"
           onChange={(e) => {
             setBoardName(e.currentTarget.value);
           }}
           value={boardName}
         />
-        <button type="button" onClick={handleBoardName}>
-          Done
-        </button>
-      </div>
+        <p style={{ color: 'red' }}>{boardNameErrors?.newBoardName?.message}</p>
+        <button type="submit">Done</button>
+      </form>
 
       <hr />
 
       <div>
         {/* 보드에 투두 추가 */}
         <form onSubmit={handleSubmit(handleNewToDo)}>
-          <input {...register('toDo')} type="text" placeholder="New ToDo" />
+          <input
+            {...register('toDo', { required: '입력하세용' })}
+            type="text"
+            placeholder="New ToDo"
+          />
+          <p style={{ color: 'red' }}>{errors?.toDo?.message}</p>
           <button type="submit">Add</button>
         </form>
       </div>
