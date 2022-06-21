@@ -2,15 +2,22 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
 import Board from './@component/Board';
-import { BoardState } from './@core/recoil/atoms';
+import { BoardState, toDoState } from './@core/recoil/atoms';
 
 function App() {
   const { register, setValue, handleSubmit } = useForm();
   const [boards, setBoards] = useRecoilState(BoardState);
-  const handleBoards = (data: any) => {
+  const [toDos, setTodos] = useRecoilState(toDoState);
+  const handleBoards = ({ board }: any) => {
     setBoards((oldBoards) => {
-      const newBoards = [...oldBoards, data.board];
+      const newBoards = [...oldBoards, board];
       return newBoards;
+    });
+    setTodos((oldToDos: any) => {
+      return {
+        ...oldToDos,
+        [board]: []
+      };
     });
     setValue('board', '');
   };
@@ -21,7 +28,11 @@ function App() {
       <br />
       <h2>Create a board</h2>
       <form onSubmit={handleSubmit(handleBoards)}>
-        <input {...register('board')} type="text" placeholder="Type a name..." />
+        <input
+          {...register('board', { required: true })}
+          type="text"
+          placeholder="New Board"
+        />
         <button type="submit">+ New</button>
       </form>
       <div>
