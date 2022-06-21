@@ -1,67 +1,36 @@
 import React from 'react';
-import { DragDropContext, Draggable, Droppable, DropResult } from 'react-beautiful-dnd';
+import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
-import styled from 'styled-components';
 import Board from './@component/Board';
-import { toDoState } from './atoms';
+import { BoardState } from './@core/recoil/atoms';
 
 function App() {
-  const [toDos, setToDos] = useRecoilState(toDoState);
-  const onDragEnd = ({ destination, source, draggableId }: any) => {
-    if (!destination) return;
-    if (destination?.droppableId === source.droppableId) {
-      setToDos((allBoards) => {
-        const boardCopy = [...allBoards[source.droppableId]];
-        const taskObj = boardCopy[source.index]; //object를 변형시키기 전에 원하는 참조값을 복사한다
-        boardCopy.splice(source.index, 1);
-        boardCopy.splice(destination?.index, 0, taskObj);
-        return {
-          ...allBoards,
-          [source.droppableId]: boardCopy
-        };
-      });
-    }
-    if (destination?.droppableId !== source.droppableId) {
-      setToDos((allBaords) => {
-        const sourceBoard = [...allBaords[source.droppableId]];
-        const destinationBoard = [...allBaords[destination.droppableId]];
-        const taskObj = sourceBoard[source.index];
-        sourceBoard.splice(source.index, 1);
-        destinationBoard.splice(destination?.index, 0, taskObj);
-        return {
-          ...allBaords,
-          [source.droppableId]: sourceBoard,
-          [destination.droppableId]: destinationBoard
-        };
-      });
-    }
+  const { register, setValue, handleSubmit } = useForm();
+  const [boards, setBoards] = useRecoilState(BoardState);
+  const handleBoards = (data: any) => {
+    setBoards((oldBoards) => {
+      const newBoards = [...oldBoards, data.board];
+      return newBoards;
+    });
+    setValue('board', '');
   };
+
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <Wrapper>
-        <Boards>
-          {Object.keys(toDos).map((board) => (
-            <Board key={board} boardId={board} toDos={toDos[board]} />
-          ))}
-        </Boards>
-      </Wrapper>
-    </DragDropContext>
+    <>
+      <h1>iWork</h1>
+      <br />
+      <h2>Create a board</h2>
+      <form onSubmit={handleSubmit(handleBoards)}>
+        <input {...register('board')} type="text" placeholder="Type a name..." />
+        <button type="submit">+ New</button>
+      </form>
+      <div>
+        {boards.map((board, index) => (
+          <Board key={index} id={index} board={board} />
+        ))}
+      </div>
+    </>
   );
 }
 
 export default App;
-
-const Wrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  max-width: 500px;
-  margin: 5vmin auto;
-`;
-
-const Boards = styled.div`
-  display: grid;
-  gap: 10px;
-  width: 100%;
-  grid-template-columns: repeat(3, 1fr);
-`;

@@ -1,60 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Droppable } from 'react-beautiful-dnd';
+import { BoardState } from '../@core/recoil/atoms';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import styled from 'styled-components';
-import DraggableCard from './DraggableCard';
-import { IToDo, toDoState } from '../atoms';
-import { useSetRecoilState } from 'recoil';
 
-interface BoardProps {
-  boardId: string;
-  toDos: IToDo[];
-}
-
-interface FormProps {
-  toDo: string;
-}
-
-const Board = ({ boardId, toDos }: BoardProps) => {
-  const { register, setValue, handleSubmit } = useForm<FormProps>();
-  const setToDos = useSetRecoilState(toDoState);
-  const onValid = ({ toDo }: FormProps) => {
-    const newToDo = {
-      id: Date.now(),
-      text: toDo
-    };
-    setToDos((allBoards) => {
-      return {
-        ...allBoards,
-        [boardId]: [...allBoards[boardId], newToDo]
-      };
+const Board = ({ id, board }: any) => {
+  const { register, handleSubmit } = useForm();
+  const [boards, setBoards] = useRecoilState(BoardState);
+  const handleBoardTitle = (data: any) => {
+    console.log(data);
+    setBoards((oldBoards) => {
+      const newBoards = [...oldBoards];
+      newBoards.splice(id, 1, data.newBoardName);
+      return newBoards;
     });
-    setValue('toDo', '');
   };
+  const handleBoardDelete = () => {
+    setBoards((oldBoards) => {
+      const newBoards = [...oldBoards];
+      newBoards.splice(id, 1);
+      return newBoards;
+    });
+  };
+
+  const [boardName, setBoardName] = useState(board);
+  useEffect(() => {
+    setBoardName(board);
+  }, [board]);
+
+  const handleBoardName = () => {
+    setBoards((oldBoards) => {
+      const newBoards = [...oldBoards];
+      newBoards.splice(id, 1, boardName); //board state가 변경됨
+      return newBoards;
+    });
+  };
+
   return (
     <Wrapper>
-      <Title>{boardId}</Title>
-      <Form onSubmit={handleSubmit(onValid)}>
+      <BoardTitle>
+        board: {board} | id: {id}
+      </BoardTitle>
+
+      <div>
         <input
-          {...register('toDo', { required: true })}
-          placeholder={`Add task on ${boardId}`}
+          type="text"
+          onChange={(e) => {
+            setBoardName(e.currentTarget.value);
+          }}
+          value={boardName}
         />
-      </Form>
-      <Droppable droppableId={boardId}>
-        {(provided, snapshot) => (
-          <Area
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            isDraggingOver={snapshot.isDraggingOver}
-            isDraggingFromThis={!!snapshot.draggingFromThisWith}
-          >
-            {toDos.map((toDo, index) => (
-              <DraggableCard index={index} key={toDo.id} id={toDo.id} text={toDo.text} />
-            ))}
-            {provided.placeholder}
-          </Area>
-        )}
-      </Droppable>
+        <button type="button" onClick={handleBoardName}>
+          Done
+        </button>
+      </div>
+
+      <button type="button" onClick={handleBoardDelete}>
+        ❌
+      </button>
+      <hr />
     </Wrapper>
   );
 };
@@ -62,32 +66,13 @@ const Board = ({ boardId, toDos }: BoardProps) => {
 export default Board;
 
 const Wrapper = styled.div`
-  outline: 3px solid red;
+  padding: 2rem;
+  background-color: #fff;
+  border-radius: 1rem;
 `;
 
-const Title = styled.h2`
-  text-align: center;
-  font-size: 1.8rem;
-  text-transform: uppercase;
-  margin: 0 0 2rem;
-`;
-
-const Form = styled.form`
-  width: 100%;
-
-  input {
-    width: 100%;
-  }
-`;
-
-const Area = styled.ul<{ isDraggingOver: boolean; isDraggingFromThis: boolean }>`
-  padding: 2rem 1rem;
-  padding-top: 3rem;
-  background-color: ${(props) =>
-    props.isDraggingOver
-      ? 'lightpink'
-      : props.isDraggingFromThis
-      ? 'lightgreen'
-      : props.theme.boardColor};
-  border-radius: 0.5rem;
+const BoardTitle = styled.h2`
+  display: inline-block;
+  font-size: 1.6rem;
+  background-color: #ffd6d6;
 `;
