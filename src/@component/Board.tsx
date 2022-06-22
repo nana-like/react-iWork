@@ -159,12 +159,16 @@ const Board = ({ id, board }: any) => {
   );
 };
 
-export default Board;
+export default React.memo(Board);
 
 const Wrapper = styled.div`
   padding: 2rem;
   background-color: #fff;
   border-radius: 1rem;
+
+  &:hover {
+    background-color: #f5f5f5;
+  }
 `;
 
 const BoardTitle = styled.h2`

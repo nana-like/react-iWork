@@ -1,6 +1,8 @@
 import React from 'react';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useForm } from 'react-hook-form';
 import { useRecoilState } from 'recoil';
+import styled from 'styled-components';
 import Board from './@component/Board';
 import { BoardState, toDoState } from './@core/recoil/atoms';
 
@@ -26,6 +28,17 @@ function App() {
     });
     setValue('board', '');
   };
+  const handleDragEnd = (info: any) => {
+    console.dir(info);
+    setBoards((oldBoards) => {
+      console.log(oldBoards);
+      const copied = [...oldBoards];
+      const old = copied.splice(info.source.index, 1);
+      copied.splice(info.destination?.index, 0, info.draggableId);
+      console.log(copied);
+      return copied;
+    });
+  };
 
   return (
     <>
@@ -44,13 +57,49 @@ function App() {
         <p style={{ color: 'red' }}>{errors?.board?.message}</p>
         <button type="submit">+ New</button>
       </form>
-      <div>
-        {boards.map((board, index) => (
-          <Board key={index} id={index} board={board} />
-        ))}
-      </div>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="boards" direction="horizontal">
+          {(provided, snapshot) => (
+            <Boards ref={provided.innerRef} {...provided.droppableProps}>
+              {boards.map((board, index) => (
+                // ! key={index} 사용하면 에러 발생
+                <Draggable draggableId={board} index={index} key={board}>
+                  {(provided) => (
+                    <BoardsArea
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <>
+                        {console.log(board)}
+                        <Board id={index} board={board} />
+                      </>
+                    </BoardsArea>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </Boards>
+          )}
+        </Droppable>
+      </DragDropContext>
     </>
   );
 }
 
 export default App;
+
+const Boards = styled.div`
+  overflow-x: scroll;
+  margin-top: 4rem;
+  display: flex;
+  padding: 3rem;
+  background-color: #d5d5d5;
+`;
+
+const BoardsArea = styled.div`
+  width: auto;
+  height: fit-content;
+  outline: 3px solid red;
+  max-width: 400px;
+`;
