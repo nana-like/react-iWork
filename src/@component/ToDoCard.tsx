@@ -83,4 +83,8 @@ const Card = styled.div`
   border: 1px solid #e0e0e0;
   background-color: #fafafa;
   padding: 1rem;
+
+  &:hover {
+    background-color: salmon;
+  }
 `;

@@ -5,8 +5,9 @@ import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
 import ToDoCard from './ToDoCard';
 import { IToDoState } from './../@core/recoil/atoms';
+import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 
-const Board = ({ id, board }: any) => {
+const Board = ({ id, board, provided }: any) => {
   const [boards, setBoards] = useRecoilState(BoardState);
   const [toDos, setToDos] = useRecoilState(toDoState);
   const [boardName, setBoardName] = useState(board);
@@ -95,9 +96,35 @@ const Board = ({ id, board }: any) => {
     });
   };
 
+  const handleDragEnd = ({ source, destination }: any) => {
+    console.dir(destination);
+    // 1번 카드를 3번으로 옮긴 경우
+    // [1,2,3]에서 1 삭제
+    if (!destination) return;
+    //동일보드인 경우
+    if (destination.droppableId === source.droppableId) {
+      console.log('yes!');
+      setToDos((oldToDos) => {
+        const copied = [...oldToDos[source.droppableId]];
+        const taskObj = copied[source.index]; //object를 변형시키기 전에 원하는 참조값을 복사한다
+        copied.splice(source.index, 1);
+        copied.splice(destination.index, 0, taskObj);
+        console.log(copied);
+        // console.log(copied);
+        return {
+          ...oldToDos,
+          [source.droppableId]: copied
+        };
+      });
+    }
+    if (destination.droppableId !== source.droppableId) {
+      console.log('no!');
+    }
+  };
+
   return (
     <Wrapper>
-      <BoardTitle>
+      <BoardTitle {...provided.dragHandleProps}>
         board: {board} | id: {id}
       </BoardTitle>
 
@@ -149,12 +176,33 @@ const Board = ({ id, board }: any) => {
         </form>
       </div>
 
-      <div>
-        {/* 보드 내 투두 목록 */}
-        {toDos[board]?.map((toDo) => (
-          <ToDoCard key={toDo.id} board={board} id={toDo.id} text={toDo.text} />
-        ))}
-      </div>
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId={board}>
+          {(provided, snapshot) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              {toDos[board]?.map((toDo, index) => (
+                <Draggable draggableId={toDo.text} key={toDo.text} index={index}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <ToDoCard
+                        key={toDo.id}
+                        board={board}
+                        id={toDo.id}
+                        text={toDo.text}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </Wrapper>
   );
 };
@@ -162,7 +210,6 @@ const Board = ({ id, board }: any) => {
 export default React.memo(Board);
 
 const Wrapper = styled.div`
-  padding: 2rem;
   background-color: #fff;
   border-radius: 1rem;
 
@@ -175,4 +222,8 @@ const BoardTitle = styled.h2`
   display: inline-block;
   font-size: 1.6rem;
   background-color: #ffd6d6;
+
+  &:hover {
+    color: red;
+  }
 `;

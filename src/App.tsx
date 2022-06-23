@@ -65,14 +65,10 @@ function App() {
                 // ! key={index} 사용하면 에러 발생
                 <Draggable draggableId={board} index={index} key={board}>
                   {(provided) => (
-                    <BoardsArea
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                    >
+                    <BoardsArea ref={provided.innerRef} {...provided.draggableProps}>
                       <>
                         {console.log(board)}
-                        <Board id={index} board={board} />
+                        <Board id={index} board={board} provided={provided} />
                       </>
                     </BoardsArea>
                   )}
