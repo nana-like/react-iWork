@@ -6,13 +6,15 @@ import GlobalStyle from './style/GlobalStyle';
 import { ThemeProvider } from 'styled-components';
 import { darkTheme } from './style/theme';
 import App from './App';
+import Sandbox from './Sandbox';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
   <RecoilRoot>
     <ThemeProvider theme={darkTheme}>
       <GlobalStyle />
-      <App />
+      {/* <App /> */}
+      <Sandbox />
     </ThemeProvider>
   </RecoilRoot>
 );

@@ -29,7 +29,6 @@ function App() {
     setValue('board', '');
   };
   const handleDragEnd = (info: any) => {
-    console.dir(info);
     setBoards((oldBoards) => {
       console.log(oldBoards);
       const copied = [...oldBoards];
@@ -67,7 +66,6 @@ function App() {
                   {(provided) => (
                     <BoardsArea ref={provided.innerRef} {...provided.draggableProps}>
                       <>
-                        {console.log(board)}
                         <Board id={index} board={board} provided={provided} />
                       </>
                     </BoardsArea>
