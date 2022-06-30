@@ -56,24 +56,27 @@ function App() {
         <p style={{ color: 'red' }}>{errors?.board?.message}</p>
         <button type="submit">+ New</button>
       </form>
+
+      {/* DND 시작 */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="boards" direction="horizontal">
           {(provided, snapshot) => (
-            <Boards ref={provided.innerRef} {...provided.droppableProps}>
-              {boards.map((board, index) => (
-                // ! key={index} 사용하면 에러 발생
-                <Draggable draggableId={board} index={index} key={board}>
-                  {(provided) => (
-                    <BoardsArea ref={provided.innerRef} {...provided.draggableProps}>
-                      <>
-                        <Board id={index} board={board} provided={provided} />
-                      </>
-                    </BoardsArea>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </Boards>
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              <div style={{ display: 'flex' }}>
+                {boards.map((board, index) => (
+                  // ! key={index} 사용하면 에러 발생 // 보드 이름으로 ID 지정
+                  <Draggable draggableId={board} index={index} key={board}>
+                    {(provided) => (
+                      <div ref={provided.innerRef} {...provided.draggableProps}>
+                        <div {...provided.dragHandleProps}>[손잡이]</div>
+                        <Board id={index} board={board} />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            </div>
           )}
         </Droppable>
       </DragDropContext>

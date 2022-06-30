@@ -7,6 +7,7 @@ import { ThemeProvider } from 'styled-components';
 import { darkTheme } from './style/theme';
 import App from './App';
 import Sandbox from './Sandbox';
+import Main from './Main';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
 root.render(
@@ -14,7 +15,8 @@ root.render(
     <ThemeProvider theme={darkTheme}>
       <GlobalStyle />
       {/* <App /> */}
-      <Sandbox />
+      {/* <Sandbox /> */}
+      <Main />
     </ThemeProvider>
   </RecoilRoot>
 );

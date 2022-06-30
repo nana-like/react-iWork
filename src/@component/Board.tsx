@@ -126,85 +126,80 @@ const Board = ({ id, board, provided }: any) => {
 
   return (
     <Wrapper>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <BoardTitle {...provided.dragHandleProps}>
-          board: {board} | id: {id}
-        </BoardTitle>
+      {/* <DragDropContext onDragEnd={handleDragEnd}> */}
+      <BoardTitle>
+        board: {board} | id: {id}
+      </BoardTitle>
 
-        {/* 보드 삭제 */}
-        <button type="button" onClick={handleBoardDelete}>
-          ❌
-        </button>
+      {/* 보드 삭제 */}
+      <button type="button" onClick={handleBoardDelete}>
+        ❌
+      </button>
 
-        <form onSubmit={boardNameSubmit(handleBoardName)}>
-          {/* 보드 이름 변경 */}
-          <input
-            {...boardNameRegister('newBoardName', {
-              validate: (value) => {
-                // boards 중에 지금 입력한 이름과 같은 게 있는지 판단
-                if (boards.some((current) => current === boardName)) {
-                  // console.log('value: ', value);
-                  // console.log('boardName: ', boardName);
-                  // console.log(value === boardName);
-                  // if (value === boardName) {
-                  //   // 단, 자신의 기존 이름과 동일한 걸 쳤다면 오케이 (다른 거 쳤다가 돌아오고 싶을 때)
-                  //   return true;
-                  // }
-                  return '새로운 이름을 입력하세요.';
-                }
+      <form onSubmit={boardNameSubmit(handleBoardName)}>
+        {/* 보드 이름 변경 */}
+        <input
+          {...boardNameRegister('newBoardName', {
+            validate: (value) => {
+              // boards 중에 지금 입력한 이름과 같은 게 있는지 판단
+              if (boards.some((current) => current === boardName)) {
+                // console.log('value: ', value);
+                // console.log('boardName: ', boardName);
+                // console.log(value === boardName);
+                // if (value === boardName) {
+                //   // 단, 자신의 기존 이름과 동일한 걸 쳤다면 오케이 (다른 거 쳤다가 돌아오고 싶을 때)
+                //   return true;
+                // }
+                return '새로운 이름을 입력하세요.';
               }
-            })}
+            }
+          })}
+          type="text"
+          onChange={(e) => {
+            setBoardName(e.currentTarget.value);
+          }}
+          value={boardName}
+        />
+        <p style={{ color: 'red' }}>{boardNameErrors?.newBoardName?.message}</p>
+        <button type="submit">Done</button>
+      </form>
+
+      <hr />
+
+      <div>
+        {/* 보드에 투두 추가 */}
+        <form onSubmit={handleSubmit(handleNewToDo)}>
+          <input
+            {...register('toDo', { required: '입력하세용' })}
             type="text"
-            onChange={(e) => {
-              setBoardName(e.currentTarget.value);
-            }}
-            value={boardName}
+            placeholder="New ToDo"
           />
-          <p style={{ color: 'red' }}>{boardNameErrors?.newBoardName?.message}</p>
-          <button type="submit">Done</button>
+          <p style={{ color: 'red' }}>{errors?.toDo?.message}</p>
+          <button type="submit">Add</button>
         </form>
+      </div>
 
-        <hr />
-
-        <div>
-          {/* 보드에 투두 추가 */}
-          <form onSubmit={handleSubmit(handleNewToDo)}>
-            <input
-              {...register('toDo', { required: '입력하세용' })}
-              type="text"
-              placeholder="New ToDo"
-            />
-            <p style={{ color: 'red' }}>{errors?.toDo?.message}</p>
-            <button type="submit">Add</button>
-          </form>
-        </div>
-
-        <Droppable droppableId={board}>
-          {(provided, snapshot) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {toDos[board]?.map((toDo, index) => (
-                <Draggable draggableId={toDo.text} key={toDo.text} index={index}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                    >
-                      <ToDoCard
-                        key={toDo.id}
-                        board={board}
-                        id={toDo.id}
-                        text={toDo.text}
-                      />
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
+      <Droppable droppableId={`droppable-${board}`}>
+        {(provided, snapshot) => (
+          <div ref={provided.innerRef} {...provided.droppableProps}>
+            {toDos[board]?.map((toDo, index) => (
+              <Draggable draggableId={toDo.text} key={toDo.text} index={index}>
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                  >
+                    <ToDoCard key={toDo.id} board={board} id={toDo.id} text={toDo.text} />
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+      {/* </DragDropContext> */}
     </Wrapper>
   );
 };
