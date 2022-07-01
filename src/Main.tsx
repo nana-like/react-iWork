@@ -85,36 +85,38 @@ const Main = () => {
           </div>
         </MainTitle>
         <CreateBoard />
-        <Droppable droppableId="boardsArea" type="board" direction="horizontal">
-          {(provided, snapshot) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              <BoardsArea>
-                {boardList.map((board, index) => (
-                  <Draggable
-                    draggableId={`board-${index}`}
-                    index={index}
-                    key={`board-${index}`}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <IWorkBoard
-                          title={board.title}
-                          content={board.content}
-                          index={index}
-                        />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </BoardsArea>
-            </div>
-          )}
-        </Droppable>
+        <BoardsWrapper>
+          <Droppable droppableId="boardsArea" type="board" direction="horizontal">
+            {(provided, snapshot) => (
+              <div ref={provided.innerRef} {...provided.droppableProps}>
+                <BoardsArea>
+                  {boardList.map((board, index) => (
+                    <Draggable
+                      draggableId={`board-${index}`}
+                      index={index}
+                      key={`board-${index}`}
+                    >
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <IWorkBoard
+                            title={board.title}
+                            content={board.content}
+                            index={index}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </BoardsArea>
+              </div>
+            )}
+          </Droppable>
+        </BoardsWrapper>
       </div>
     </DragDropContext>
   );
@@ -142,6 +144,10 @@ const MainTitle = styled.h1`
       -webkit-text-stroke: 2px #111;
     }
   }
+`;
+
+const BoardsWrapper = styled.div`
+  overflow-x: auto;
 `;
 
 const BoardsArea = styled.div`
