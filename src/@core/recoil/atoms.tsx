@@ -21,18 +21,18 @@ export interface IWorkBoardProps {
 
 export const IWorkBoardState = atom<Array<IWorkBoardProps>>({
   key: 'IWorkBoard',
-  effects_UNSTABLE: [persistAtom],
+  // effects_UNSTABLE: [persistAtom],
   default: [
     {
       title: '첫 번째 보드',
       content: [
         {
           id: 0,
-          text: '카드1-1'
+          text: '나의 첫 번째 카드'
         },
         {
           id: 1,
-          text: '카드1-2'
+          text: '두 번째 카드 나는야 나나 나는 나나'
         },
         {
           id: 2,

@@ -2,6 +2,8 @@ import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useRecoilState } from 'recoil';
 import { IWorkBoardState, IWorkCardState } from './@core/recoil/atoms';
 import IWorkBoard from './@component/IWorkBoard';
+import styled from 'styled-components';
+import CreateBoard from './@component/CreateBoard';
 
 const boardList = ['To_do', 'Doing', 'Done'];
 
@@ -69,10 +71,24 @@ const Main = () => {
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ padding: 30 }}>
+        <MainTitle>
+          <span>iWORK</span>
+          <div className="deco" aria-hidden="true">
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+            <span>iWORK</span>
+          </div>
+        </MainTitle>
+        <CreateBoard />
         <Droppable droppableId="boardsArea" type="board" direction="horizontal">
           {(provided, snapshot) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
-              <div style={{ display: 'flex' }}>
+              <BoardsArea>
                 {boardList.map((board, index) => (
                   <Draggable
                     draggableId={`board-${index}`}
@@ -85,13 +101,17 @@ const Main = () => {
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
                       >
-                        <IWorkBoard title={board.title} content={board.content} />
+                        <IWorkBoard
+                          title={board.title}
+                          content={board.content}
+                          index={index}
+                        />
                       </div>
                     )}
                   </Draggable>
                 ))}
                 {provided.placeholder}
-              </div>
+              </BoardsArea>
             </div>
           )}
         </Droppable>
@@ -101,6 +121,32 @@ const Main = () => {
 };
 
 export default Main;
+
+const MainTitle = styled.h1`
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  padding: 1.6rem 1rem;
+  font-size: 4.6rem;
+  font-weight: 700;
+  border-top: 1px solid #111;
+  border-bottom: 1px solid #111;
+  letter-spacing: 0.05rem;
+
+  .deco {
+    overflow: hidden;
+    user-select: none;
+
+    span:nth-child(2n - 1) {
+      color: transparent;
+      -webkit-text-stroke: 2px #111;
+    }
+  }
+`;
+
+const BoardsArea = styled.div`
+  display: flex;
+`;
 
 /**
  *
