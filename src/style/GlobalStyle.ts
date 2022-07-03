@@ -13,6 +13,10 @@ const GlobalStyle = createGlobalStyle`
     font-size: 62.5%;
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Segoe UI', 'Malgun Gothic',
   '맑은 고딕', sans-serif;
+
+    @media (max-width: 900px) {
+      font-size: 50%;
+    }
   }
 
   body {

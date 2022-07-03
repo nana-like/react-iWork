@@ -1,15 +1,15 @@
 import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
 import { useRecoilState } from 'recoil';
-import { IWorkBoardState, IWorkCardState } from './@core/recoil/atoms';
+import { IWorkBoardState } from './@core/recoil/atoms';
 import IWorkBoard from './@component/IWorkBoard';
 import styled from 'styled-components';
 import CreateBoard from './@component/CreateBoard';
-
-const boardList = ['To_do', 'Doing', 'Done'];
+import { useState } from 'react';
 
 const Main = () => {
-  // const [card, setCard] = useRecoilState(IWorkCardState);
   const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
+  const [resetEditCard, setResetEditCard] = useState(false); //편집 중인 카드가 있다면 리셋할지
+
   const onDragEnd = ({ source, destination, type }: any) => {
     if (!destination) return;
     if (type === 'board') {
@@ -40,6 +40,7 @@ const Main = () => {
           return [...copied];
         });
       }
+
       if (destination.droppableId !== source.droppableId) {
         // 다른 보드인 경우
         setBoardList((oldBoardList) => {
@@ -67,10 +68,14 @@ const Main = () => {
         });
       }
     }
+    setResetEditCard(true);
   };
+  console.log(boardList);
+
+  const [newCardAdded, setNewCardAdded] = useState(false);
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div style={{ padding: 30 }}>
+      <div style={{ padding: '3rem' }}>
         <MainTitle>
           <span>iWORK</span>
           <div className="deco" aria-hidden="true">
@@ -86,30 +91,40 @@ const Main = () => {
         </MainTitle>
         <CreateBoard />
         <BoardsWrapper>
-          <Droppable droppableId="boardsArea" type="board" direction="horizontal">
+          <Droppable
+            droppableId="boardsArea"
+            type="board"
+            direction="horizontal"
+          >
             {(provided, snapshot) => (
               <div ref={provided.innerRef} {...provided.droppableProps}>
                 <BoardsArea>
                   {boardList.map((board, index) => (
-                    <Draggable
-                      draggableId={`board-${index}`}
-                      index={index}
-                      key={`board-${index}`}
-                    >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                        >
-                          <IWorkBoard
-                            title={board.title}
-                            content={board.content}
-                            index={index}
-                          />
-                        </div>
-                      )}
-                    </Draggable>
+                    <main>
+                      <Draggable
+                        draggableId={`board-${index}`}
+                        index={index}
+                        key={`board-${index}`}
+                      >
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                          >
+                            <IWorkBoard
+                              title={board.title}
+                              content={board.content}
+                              index={index}
+                              resetEditCard={resetEditCard}
+                              setResetEditCard={setResetEditCard}
+                              newCardAdded={newCardAdded}
+                              setNewCardAdded={setNewCardAdded}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    </main>
                   ))}
                   {provided.placeholder}
                 </BoardsArea>
@@ -148,10 +163,14 @@ const MainTitle = styled.h1`
 
 const BoardsWrapper = styled.div`
   overflow-x: auto;
+  padding-bottom: 3rem;
 `;
 
 const BoardsArea = styled.div`
   display: flex;
+  main {
+    height: fit-content;
+  }
 `;
 
 /**

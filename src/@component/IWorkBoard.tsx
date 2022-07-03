@@ -1,15 +1,64 @@
 import { useEffect, useState } from 'react';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
-import { IWorkBoardProps } from '../@core/recoil/atoms';
+import { IWorkBoardProps, IWorkBoardState } from '../@core/recoil/atoms';
 import styled from 'styled-components';
 import IWorkCard from './IWorkCard';
+import { useRecoilState } from 'recoil';
+import { useForm } from 'react-hook-form';
 
 interface IWorkBoardPropsWithIndex extends IWorkBoardProps {
   index: number;
+  newCardAdded: boolean;
+  setNewCardAdded: any;
+  resetEditCard: any;
+  setResetEditCard: any;
 }
 
-const IWorkBoard = ({ title, content, index: targetIndex }: IWorkBoardPropsWithIndex) => {
+const IWorkBoard = ({
+  title,
+  content,
+  index: targetIndex,
+  newCardAdded,
+  resetEditCard,
+  setResetEditCard,
+  setNewCardAdded
+}: IWorkBoardPropsWithIndex) => {
   const [boardTitle, setBoardTitle] = useState(title);
+  const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
+  const {
+    register,
+    setValue,
+    handleSubmit,
+    formState: { errors }
+  } = useForm();
+
+  const createCard = ({ createCard }: any) => {
+    if (!createCard) return;
+    setValue('createCard', '');
+    setNewCardAdded(true);
+    setBoardList((oldBoardList) => {
+      const copied = [...oldBoardList];
+      const targetBoardContent = [...oldBoardList[targetIndex].content];
+      const newCard = {
+        id: Date.now(),
+        text: createCard
+      };
+      targetBoardContent.splice(0, 0, newCard);
+      copied[targetIndex] = {
+        title: copied[targetIndex].title,
+        content: targetBoardContent
+      };
+      return [...copied];
+    });
+  };
+
+  const onDeleteBoard = () => {
+    setBoardList((oldBoardList) => {
+      const copied = [...oldBoardList];
+      copied.splice(targetIndex, 1);
+      return copied;
+    });
+  };
 
   useEffect(() => {
     setBoardTitle(title);
@@ -19,7 +68,7 @@ const IWorkBoard = ({ title, content, index: targetIndex }: IWorkBoardPropsWithI
     <Board>
       <div className="board-title">
         <span>{title}</span>
-        <button className="board-delete">
+        <button className="board-delete" onClick={onDeleteBoard}>
           <svg
             width="20"
             height="20"
@@ -30,37 +79,20 @@ const IWorkBoard = ({ title, content, index: targetIndex }: IWorkBoardPropsWithI
             <path
               d="M4.5 4.5L15.5 15.5M15.5 4.5L4.5 15.5"
               stroke="currentColor"
-              stroke-width="2"
+              strokeWidth="2"
             />
           </svg>
-          {/* <svg
-            width="512"
-            height="512"
-            viewBox="0 0 512 512"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M161 164c10.988 13.43 131.245 132.262 190 190"
-              stroke="#000"
-              stroke-width="40"
-              stroke-linecap="round"
-            />
-            <path
-              d="M161 354.763c13.43-10.988 132.262-131.245 190-190"
-              stroke="#000"
-              stroke-width="40"
-              stroke-linecap="round"
-            />
-            <circle cx="256" cy="256" r="236" stroke="#000" stroke-width="40" />
-          </svg> */}
         </button>
       </div>
       <div></div>
 
       <CrateCard>
-        <form>
-          <input placeholder="Add a task" />
+        <form onSubmit={handleSubmit(createCard)}>
+          <input
+            {...register('createCard')}
+            type="text"
+            placeholder="Add a task"
+          />
         </form>
       </CrateCard>
 
@@ -80,7 +112,14 @@ const IWorkBoard = ({ title, content, index: targetIndex }: IWorkBoardPropsWithI
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
                     >
-                      <IWorkCard text={card.text} />
+                      <IWorkCard
+                        id={card.id}
+                        text={card.text}
+                        boardIndex={targetIndex}
+                        cardIndex={index}
+                        newCardAdded={newCardAdded}
+                        setNewCardAdded={setNewCardAdded}
+                      />
                     </div>
                   )}
                 </Draggable>
@@ -97,7 +136,8 @@ const IWorkBoard = ({ title, content, index: targetIndex }: IWorkBoardPropsWithI
 export default IWorkBoard;
 
 const Board = styled.div`
-  width: 28rem;
+  width: 30rem;
+  height: fit-content;
   // padding: 2.8rem;
   border: 0.4rem solid #111;
   border-radius: 1rem;

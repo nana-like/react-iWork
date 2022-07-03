@@ -21,7 +21,7 @@ export interface IWorkBoardProps {
 
 export const IWorkBoardState = atom<Array<IWorkBoardProps>>({
   key: 'IWorkBoard',
-  // effects_UNSTABLE: [persistAtom],
+  effects_UNSTABLE: [persistAtom],
   default: [
     {
       title: '첫 번째 보드',
