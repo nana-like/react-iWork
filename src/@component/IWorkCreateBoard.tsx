@@ -3,15 +3,10 @@ import { useRecoilState } from 'recoil';
 import styled from 'styled-components';
 import { IWorkBoardState } from '../@core/recoil/atoms';
 
-const CreateBoard = () => {
+const IWorkCreateBoard = () => {
   const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    formState: { errors }
-  } = useForm();
-  const createBoard = ({ createBoard }: any) => {
+  const { register, setValue, handleSubmit } = useForm();
+  const createBoard = ({ createBoard }: { [x: string]: string }) => {
     if (!createBoard) return;
     if (boardList.find(({ title }) => title === createBoard)) return;
     setBoardList((oldBoardList) => {
@@ -40,7 +35,7 @@ const CreateBoard = () => {
   );
 };
 
-export default CreateBoard;
+export default IWorkCreateBoard;
 
 const Creator = styled.div`
   display: flex;

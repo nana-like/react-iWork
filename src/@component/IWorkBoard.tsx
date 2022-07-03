@@ -1,68 +1,52 @@
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction } from 'react';
 import { Draggable, Droppable } from 'react-beautiful-dnd';
-import { IWorkBoardProps, IWorkBoardState } from '../@core/recoil/atoms';
+import { IBoard, IWorkBoardState } from '../@core/recoil/atoms';
 import styled from 'styled-components';
 import IWorkCard from './IWorkCard';
-import { useRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { useForm } from 'react-hook-form';
 
-interface IWorkBoardPropsWithIndex extends IWorkBoardProps {
+interface IWorkBoardProps extends IBoard {
   index: number;
-  newCardAdded: boolean;
-  setNewCardAdded: any;
-  resetEditCard: any;
-  setResetEditCard: any;
+  resetEditCard?: boolean;
+  setResetEditCard?: Dispatch<SetStateAction<boolean>>;
 }
 
 const IWorkBoard = ({
   title,
   content,
-  index: targetIndex,
-  newCardAdded,
+  index: boardIndex,
   resetEditCard,
-  setResetEditCard,
-  setNewCardAdded
-}: IWorkBoardPropsWithIndex) => {
-  const [boardTitle, setBoardTitle] = useState(title);
-  const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    formState: { errors }
-  } = useForm();
-
-  const createCard = ({ createCard }: any) => {
+  setResetEditCard
+}: IWorkBoardProps) => {
+  const setBoardList = useSetRecoilState(IWorkBoardState);
+  const { register, setValue, handleSubmit } = useForm();
+  const onCreateCard = ({ createCard }: { [x: string]: string }) => {
     if (!createCard) return;
     setValue('createCard', '');
-    setNewCardAdded(true);
+    setResetEditCard?.(true);
     setBoardList((oldBoardList) => {
-      const copied = [...oldBoardList];
-      const targetBoardContent = [...oldBoardList[targetIndex].content];
+      const boardList = [...oldBoardList];
+      const targetBoardContent = [...oldBoardList[boardIndex].content];
       const newCard = {
         id: Date.now(),
         text: createCard
       };
       targetBoardContent.splice(0, 0, newCard);
-      copied[targetIndex] = {
-        title: copied[targetIndex].title,
+      boardList[boardIndex] = {
+        title: boardList[boardIndex].title,
         content: targetBoardContent
       };
-      return [...copied];
+      return [...boardList];
     });
   };
-
   const onDeleteBoard = () => {
     setBoardList((oldBoardList) => {
-      const copied = [...oldBoardList];
-      copied.splice(targetIndex, 1);
-      return copied;
+      const boardList = [...oldBoardList];
+      boardList.splice(boardIndex, 1);
+      return boardList;
     });
   };
-
-  useEffect(() => {
-    setBoardTitle(title);
-  }, [title]);
 
   return (
     <Board>
@@ -84,51 +68,51 @@ const IWorkBoard = ({
           </svg>
         </button>
       </div>
-      <div></div>
-
-      <CrateCard>
-        <form onSubmit={handleSubmit(createCard)}>
+      <div className="board-create">
+        <form onSubmit={handleSubmit(onCreateCard)}>
           <input
             {...register('createCard')}
             type="text"
             placeholder="Add a task"
           />
         </form>
-      </CrateCard>
-
-      <CardsArea>
-        <Droppable droppableId={`${title}`} type="card">
-          {(provided, snapshot) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {content.map((card, index) => (
-                <Draggable
-                  draggableId={`${title}-card-${index}`}
-                  index={index}
-                  key={`${title}-card-${index}`}
-                >
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                      {...provided.dragHandleProps}
-                    >
-                      <IWorkCard
-                        id={card.id}
-                        text={card.text}
-                        boardIndex={targetIndex}
-                        cardIndex={index}
-                        newCardAdded={newCardAdded}
-                        setNewCardAdded={setNewCardAdded}
-                      />
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </CardsArea>
+      </div>
+      <Droppable droppableId={`${title}`} type="card">
+        {(provided, snapshot) => (
+          <div
+            className="board-droppable"
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+          >
+            {content.map((card, index) => (
+              <Draggable
+                draggableId={`${title}-card-${index}`}
+                index={index}
+                key={`${title}-card-${index}`}
+              >
+                {(provided, snapshot) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    {...provided.dragHandleProps}
+                  >
+                    <IWorkCard
+                      id={card.id}
+                      text={card.text}
+                      boardIndex={boardIndex}
+                      cardIndex={index}
+                      resetEditCard={resetEditCard}
+                      setResetEditCard={setResetEditCard}
+                      isDragging={snapshot.isDragging}
+                    />
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </Board>
   );
 };
@@ -136,32 +120,29 @@ const IWorkBoard = ({
 export default IWorkBoard;
 
 const Board = styled.div`
+  overflow: hidden;
   width: 30rem;
-  height: fit-content;
-  // padding: 2.8rem;
-  border: 0.4rem solid #111;
-  border-radius: 1rem;
+  height: auto;
   margin-right: 2rem;
   background-color: #fff;
-  overflow: hidden;
+  border: 0.4rem solid #111;
+  border-radius: 1rem;
 
   .board-title {
+    overflow: hidden;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: relative;
-    overflow: hidden;
+    margin-bottom: 2rem;
+    padding: 2rem 2.6rem 2rem;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-bottom: 2rem;
     line-height: 2.8rem;
     font-size: 2.2rem;
-    font-weight: 700;
-
-    padding: 2rem 2.6rem 2rem;
-    // background-color: #ededed;
-    background-color: #ffed00;
+    font-weight: bold;
     background-color: #fff458;
+
     span {
       overflow: hidden;
       text-overflow: ellipsis;
@@ -169,9 +150,7 @@ const Board = styled.div`
     }
 
     &:hover .board-delete {
-      visibility: visible;
       opacity: 0.5;
-      transition: all 0.2s;
 
       &:hover {
         opacity: 1;
@@ -180,47 +159,53 @@ const Board = styled.div`
   }
 
   .board-delete {
-    margin-left: 0.6rem;
-    visibility: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 0;
+    margin-left: 0.6rem;
     padding: 0.2rem;
     border-radius: 50%;
     background: none;
     opacity: 0;
     color: #111;
-    transition: all 0.2s;
-    /* transition: visibility 0.1s opacity 0.2s; */
+    transition: opacity 0.2s;
+    border: 0;
 
     svg {
       width: 2.5rem;
       height: 2.5rem;
     }
   }
-`;
 
-const CrateCard = styled.div`
-  overflow: hidden;
-  margin: 0 2.6rem 2rem;
-  border-bottom: 3px solid #111;
-
-  input {
-    width: 100%;
-    padding: 0.4rem 0.2rem 0.6rem 0.2rem;
-    font-size: 1.8rem;
-    font-weight: 500;
-    text-overflow: ellipsis;
+  .board-create {
     overflow: hidden;
-    white-space: nowrap;
+    margin: 0 2.6rem 2rem;
+    border-bottom: 3px solid #111;
 
-    &::placeholder {
-      color: #999;
+    input {
+      width: 100%;
+      padding: 0.4rem 0.2rem 0.6rem 0.2rem;
+      font-size: 1.8rem;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+
+      &::placeholder {
+        color: #999;
+      }
     }
   }
-`;
 
-const CardsArea = styled.div`
-  padding: 0 2.6rem 2.6rem;
+  .board-droppable {
+    padding: 0 2.6rem 2.6rem;
+  }
+
+  [data-rbd-droppable-id] {
+    min-height: 0.1rem;
+  }
+
+  [data-rbd-draggable-id] {
+    margin-top: 1rem;
+  }
 `;

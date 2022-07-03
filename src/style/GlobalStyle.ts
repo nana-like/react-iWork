@@ -3,7 +3,6 @@ import Reset from 'styled-reset';
 
 const GlobalStyle = createGlobalStyle`
   ${Reset};
-  @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard-dynamic-subset.css');
 
   * {
     box-sizing: border-box;

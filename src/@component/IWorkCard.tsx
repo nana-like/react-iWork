@@ -1,45 +1,51 @@
-import { createRef, useEffect, useRef, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useRecoilState } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import styled from 'styled-components';
-import { IWorkBoardState } from '../@core/recoil/atoms';
+import { ICard, IWorkBoardState } from '../@core/recoil/atoms';
+
+interface IWorkCardProps extends ICard {
+  boardIndex: number;
+  cardIndex: number;
+  resetEditCard?: boolean;
+  setResetEditCard?: Dispatch<SetStateAction<boolean>>;
+  isDragging?: boolean;
+}
 
 const IWorkCard = ({
   id,
   text,
   boardIndex,
   cardIndex,
-  newCardAdded,
-  setNewCardAdded
-}: any) => {
-  const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
-  const [currentCardText, setCurrentCardText] = useState(text);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const {
-    register,
-    setValue,
-    handleSubmit,
-    setFocus,
-    reset,
-    formState: { errors }
-  } = useForm();
-
-  // const setFocus = () => {
-  //   ref.current && ref.current.focus();
-  // };
+  resetEditCard,
+  setResetEditCard,
+  isDragging
+}: IWorkCardProps) => {
+  const setBoardList = useSetRecoilState(IWorkBoardState);
+  const [isEditCard, setIsEditCard] = useState(false);
+  const { register, handleSubmit, setFocus, reset } = useForm();
 
   useEffect(() => {
-    console.log('newCardAdded', newCardAdded);
-    if (newCardAdded) {
-      setIsEditMode(false);
-      setNewCardAdded(false);
+    if (resetEditCard) {
+      setIsEditCard(false);
+      setResetEditCard?.(false);
     }
-  }, [newCardAdded]);
+  }, [resetEditCard, setResetEditCard]);
 
-  const onEditCard = ({ editCard }: any) => {
-    setIsEditMode(false);
+  const onShowEdit = () => {
+    setIsEditCard(true);
+    reset({
+      editCard: text
+    });
+    setTimeout(() => {
+      setFocus('editCard');
+    }, 0);
+  };
+
+  const onEditCard = ({ editCard }: { [x: string]: string }) => {
+    setIsEditCard(false);
     setBoardList((oldBoardList) => {
-      const copied = [...oldBoardList];
+      const boardList = [...oldBoardList];
       const targetBoardContent = [...oldBoardList[boardIndex].content];
       const targetCard = targetBoardContent[cardIndex];
       const newCard = {
@@ -47,62 +53,39 @@ const IWorkCard = ({
         text: editCard
       };
       targetBoardContent.splice(cardIndex, 1, newCard);
-      copied[boardIndex] = {
-        title: copied[boardIndex].title,
+      boardList[boardIndex] = {
+        title: boardList[boardIndex].title,
         content: targetBoardContent
       };
-      // const targetBoardContent = [...copied[boardIndex].content];
-      // const targetId = targetBoardContent.findIndex((todo) => todo.id === id);
-      // targetBoardContent.splice(targetId, 1);
-      // copied[boardIndex] = {
-      //   title: copied[boardIndex].title,
-      //   content: [...targetBoardContent]
-      // };
-      return [...copied];
+      return [...boardList];
     });
-  };
-
-  const onShowEdit = () => {
-    setIsEditMode(true);
-    // setFocus('editCard');
-    reset({
-      editCard: text
-    });
-
-    setTimeout(() => {
-      setFocus('editCard');
-    }, 0);
-    // if (inputRef.current) {
-    //   inputRef.current.focus();
-    // }
-    console.log(isEditMode);
-  };
-
-  const onBlurEdit = () => {
-    console.log('ONBLUR');
   };
 
   const onDeleteCard = () => {
     setBoardList((oldBoardList) => {
-      const copied = [...oldBoardList];
-      const targetBoardContent = [...copied[boardIndex].content];
+      const boardList = [...oldBoardList];
+      const targetBoardContent = [...boardList[boardIndex].content];
       const targetId = targetBoardContent.findIndex((todo) => todo.id === id);
       targetBoardContent.splice(targetId, 1);
-      copied[boardIndex] = {
-        title: copied[boardIndex].title,
+      boardList[boardIndex] = {
+        title: boardList[boardIndex].title,
         content: [...targetBoardContent]
       };
-      return [...copied];
+      return [...boardList];
     });
   };
 
   return (
-    <Card isEditMode={isEditMode}>
-      {!isEditMode && (
+    <Card isEditCard={isEditCard} isDragging={isDragging}>
+      {!isEditCard && (
         <div className="card-main">
           <p>{text}</p>
           <div className="card-buttons">
-            <button className="card-edit-button" onClick={onShowEdit}>
+            <button
+              className="card-edit-button"
+              onClick={onShowEdit}
+              aria-label="카드 편집"
+            >
               <svg
                 width="21"
                 height="20"
@@ -123,7 +106,11 @@ const IWorkCard = ({
                 />
               </svg>
             </button>
-            <button className="card-delete-button" onClick={onDeleteCard}>
+            <button
+              className="card-delete-button"
+              onClick={onDeleteCard}
+              aria-label="카드 삭제"
+            >
               <svg
                 width="20"
                 height="20"
@@ -141,7 +128,7 @@ const IWorkCard = ({
           </div>
         </div>
       )}
-      {isEditMode && (
+      {isEditCard && (
         <div className="card-edit">
           <form onSubmit={handleSubmit(onEditCard)}>
             <input
@@ -149,15 +136,12 @@ const IWorkCard = ({
               type="text"
               placeholder="Type here..."
               defaultValue={text}
-              // onChange={(e) => {
-              //   setCurrentCardText(e.currentTarget.value);
-              // }}
               onKeyDown={(e) => {
                 if (e.key === 'Escape') {
                   reset({
                     editCard: text
                   });
-                  setIsEditMode(false);
+                  setIsEditCard(false);
                 }
               }}
             />
@@ -165,11 +149,12 @@ const IWorkCard = ({
           <button
             className="card-edit-cancle"
             type="button"
+            aria-label="카드 편집 취소"
             onClick={() => {
               reset({
                 editCard: text
               });
-              setIsEditMode(false);
+              setIsEditCard(false);
             }}
           >
             <svg
@@ -194,41 +179,25 @@ const IWorkCard = ({
 
 export default IWorkCard;
 
-const Card = styled.div<{ isEditMode: boolean }>`
-  /* overflow: hidden; */
-  margin-top: 0.8rem;
-  /* padding: ${(prop) => (prop.isEditMode ? '1.1rem 1rem' : '1.4rem')}; */
-  padding: 1.4rem;
+const Card = styled.div<{
+  isEditCard: boolean;
+  isDragging: boolean | undefined;
+}>`
+  opacity: ${(prop) => (prop.isDragging ? 0.7 : 1)};
+  padding: 1.4rem 1.4rem;
+  color: ${(prop) => (prop.isEditCard ? '#111' : ' #fff')};
   font-size: 1.6rem;
   font-weight: 500;
-  border-radius: 3px;
-
-  color: #fff;
-  background-color: #111;
-  background-color: ${(prop) => (prop.isEditMode ? '#fff' : '#111')};
   line-height: 2.4rem;
-  box-sizing: border-box;
+  background-color: ${(prop) => (prop.isEditCard ? '#fff' : '#111')};
   border: 2px solid #111;
-  color: ${(prop) => (prop.isEditMode ? '#111' : ' #fff')};
+  border-radius: 3px;
+  /* outline: ${(prop) => (prop.isDragging ? '3px solid #fff458' : 'null')}; */
 
   &:hover {
-    .card-buttons {
+    .card-main .card-buttons {
       opacity: 1;
     }
-  }
-
-  .card-main {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    /* padding: 0.2rem 0; */
-  }
-
-  p {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    margin-right: 0.8rem;
   }
 
   button {
@@ -239,42 +208,54 @@ const Card = styled.div<{ isEditMode: boolean }>`
     border: 0;
   }
 
-  .card-buttons {
-    opacity: 0;
+  .card-main {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: space-between;
 
-    button {
-      opacity: 0.5;
-
-      width: 1.8rem;
-      height: 1.8rem;
-      color: #fff;
-
-      svg {
-        flex-shrink: 0;
-      }
-
-      &:hover {
-        opacity: 1;
-      }
+    p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 0.8rem;
     }
-  }
 
-  .card-edit-button {
-    svg {
-      width: 1.7rem;
+    .card-buttons {
+      opacity: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      transition: opacity 0.2s;
+
+      button {
+        opacity: 0.5;
+        width: 1.4rem;
+        height: 1.4rem;
+        color: #fff;
+        transition: opacity 0.2s;
+
+        svg {
+          flex-shrink: 0;
+        }
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+
+      .card-edit-button svg {
+        width: 1.6rem;
+      }
     }
   }
 
   .card-edit {
-    /* display: none; */
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* padding: 0 0.2rem; */
+    padding: 0.4rem 0;
 
     form {
       width: 100%;
@@ -282,36 +263,29 @@ const Card = styled.div<{ isEditMode: boolean }>`
 
     input {
       width: 100%;
+      padding: 0;
       flex-shrink: 0;
       font-size: 1.6rem;
       font-weight: 500;
-      padding: 0;
-      /* border: 4px solid #fff; */
-      /* border-bottom-width: 2px; */
-
-      color: #fff;
-      color: ${(prop) => (prop.isEditMode ? '#111' : ' #fff')};
+      color: ${(prop) => (prop.isEditCard ? '#111' : ' #fff')};
       background-color: transparent;
-      /* border-bottom: 1px solid #fff; */
-      /* background-color: #fff; */
-      /* background-color: rgba(196, 196, 196, 0.5); */
     }
-  }
 
-  .card-edit-cancle {
-    width: 1.8rem;
-    height: 1.8rem;
-    padding: 0;
-    color: #111;
-    margin-left: 0.8rem;
-    border-radius: 50%;
-    outline: 0.15rem solid #111;
-    flex-shrink: 0;
-    padding: 0.2rem;
+    .card-edit-cancle {
+      width: 1.8rem;
+      height: 1.8rem;
+      padding: 0;
+      color: #111;
+      margin-left: 0.8rem;
+      border-radius: 50%;
+      outline: 0.15rem solid #111;
+      flex-shrink: 0;
+      padding: 0.2rem;
 
-    svg {
-      width: 1.6rem;
-      height: 1.6rem;
+      svg {
+        width: 1.6rem;
+        height: 1.6rem;
+      }
     }
   }
 `;

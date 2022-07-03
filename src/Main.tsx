@@ -1,81 +1,110 @@
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
+import {
+  DragDropContext,
+  Draggable,
+  DraggableLocation,
+  Droppable
+} from 'react-beautiful-dnd';
 import { useRecoilState } from 'recoil';
 import { IWorkBoardState } from './@core/recoil/atoms';
 import IWorkBoard from './@component/IWorkBoard';
 import styled from 'styled-components';
-import CreateBoard from './@component/CreateBoard';
+import IWorkCreateBoard from './@component/IWorkCreateBoard';
 import { useState } from 'react';
+import IWorkTrashBin from './@component/IWorkTrashBin';
+
+interface IDnd {
+  source: DraggableLocation;
+  destination?: DraggableLocation;
+  type?: string;
+}
 
 const Main = () => {
   const [boardList, setBoardList] = useRecoilState(IWorkBoardState);
   const [resetEditCard, setResetEditCard] = useState(false); //편집 중인 카드가 있다면 리셋할지
+  const [trashBinShow, setTrashBinShow] = useState(false);
 
-  const onDragEnd = ({ source, destination, type }: any) => {
+  const onDragStart = ({ type }: { type: string }) => {
+    if (type === 'card') {
+      setTrashBinShow(true);
+    }
+  };
+  const onDragEnd = ({ source, destination, type }: IDnd) => {
+    setTrashBinShow(false);
     if (!destination) return;
     if (type === 'board') {
       setBoardList((oldBoardList) => {
-        const copied = [...oldBoardList];
-        const targetBoard = copied[source.index];
-        copied.splice(source.index, 1);
-        copied.splice(destination?.index, 0, targetBoard);
-        return copied;
+        const boardList = [...oldBoardList];
+        const targetBoard = boardList[source.index];
+        boardList.splice(source.index, 1);
+        boardList.splice(destination?.index, 0, targetBoard);
+        return boardList;
       });
     }
     if (type === 'card') {
-      if (destination.droppableId === source.droppableId) {
-        // 동일 보드인 경우
+      if (destination.droppableId === 'trashbin') {
+        // 쓰레기통으로 옮긴 경우
         setBoardList((oldBoardList) => {
-          const copied = [...oldBoardList];
-          const targetIndex = copied.findIndex(
+          const boardList = [...oldBoardList];
+          const targetIndex = boardList.findIndex(
             ({ title }) => title === source.droppableId
           );
-          const targetBoardContent = [...copied[targetIndex].content];
-          const targetCard = targetBoardContent[source.index];
+          const targetBoardContent = [...boardList[targetIndex].content];
           targetBoardContent.splice(source.index, 1);
-          targetBoardContent.splice(destination?.index, 0, targetCard);
-          copied[targetIndex] = {
+          boardList[targetIndex] = {
             title: source.droppableId,
             content: [...targetBoardContent]
           };
-          return [...copied];
+          return [...boardList];
         });
-      }
-
-      if (destination.droppableId !== source.droppableId) {
-        // 다른 보드인 경우
+      } else if (destination.droppableId === source.droppableId) {
         setBoardList((oldBoardList) => {
-          const copied = [...oldBoardList];
-          const sourceIndex = copied.findIndex(
+          const boardList = [...oldBoardList];
+          const targetIndex = boardList.findIndex(
             ({ title }) => title === source.droppableId
           );
-          const destinationIndex = copied.findIndex(
+          const targetBoardContent = [...boardList[targetIndex].content];
+          const targetCard = targetBoardContent[source.index];
+          targetBoardContent.splice(source.index, 1);
+          targetBoardContent.splice(destination?.index, 0, targetCard);
+          boardList[targetIndex] = {
+            title: source.droppableId,
+            content: [...targetBoardContent]
+          };
+          return [...boardList];
+        });
+      } else if (destination.droppableId !== source.droppableId) {
+        setBoardList((oldBoardList) => {
+          const boardList = [...oldBoardList];
+          const sourceIndex = boardList.findIndex(
+            ({ title }) => title === source.droppableId
+          );
+          const destinationIndex = boardList.findIndex(
             ({ title }) => title === destination.droppableId
           );
-          const sourceBoardContent = [...copied[sourceIndex].content];
-          const destinationBoardContent = [...copied[destinationIndex].content];
+          const sourceBoardContent = [...boardList[sourceIndex].content];
+          const destinationBoardContent = [
+            ...boardList[destinationIndex].content
+          ];
           const targetCard = sourceBoardContent[source.index];
           sourceBoardContent.splice(source.index, 1);
           destinationBoardContent.splice(destination?.index, 0, targetCard);
-          copied[sourceIndex] = {
+          boardList[sourceIndex] = {
             title: source.droppableId,
             content: [...sourceBoardContent]
           };
-          copied[destinationIndex] = {
+          boardList[destinationIndex] = {
             title: destination.droppableId,
             content: [...destinationBoardContent]
           };
-          return [...copied];
+          return [...boardList];
         });
       }
     }
     setResetEditCard(true);
   };
-  console.log(boardList);
-
-  const [newCardAdded, setNewCardAdded] = useState(false);
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div style={{ padding: '3rem' }}>
+    <MainWrapper>
+      <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <MainTitle>
           <span>iWORK</span>
           <div className="deco" aria-hidden="true">
@@ -89,55 +118,87 @@ const Main = () => {
             <span>iWORK</span>
           </div>
         </MainTitle>
-        <CreateBoard />
-        <BoardsWrapper>
-          <Droppable
-            droppableId="boardsArea"
-            type="board"
-            direction="horizontal"
-          >
-            {(provided, snapshot) => (
-              <div ref={provided.innerRef} {...provided.droppableProps}>
-                <BoardsArea>
-                  {boardList.map((board, index) => (
-                    <main>
-                      <Draggable
-                        draggableId={`board-${index}`}
+        <IWorkCreateBoard />
+        <Droppable droppableId="boardsArea" type="board" direction="horizontal">
+          {(provided, snapshot) => (
+            <div
+              className="boards-wrapper"
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+            >
+              {boardList.map((board, index) => (
+                <Draggable
+                  draggableId={`board-${index}`}
+                  index={index}
+                  key={`board-${index}`}
+                >
+                  {(provided) => (
+                    <div
+                      className="board-wrap"
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                    >
+                      <IWorkBoard
+                        title={board.title}
+                        content={board.content}
                         index={index}
-                        key={`board-${index}`}
-                      >
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                          >
-                            <IWorkBoard
-                              title={board.title}
-                              content={board.content}
-                              index={index}
-                              resetEditCard={resetEditCard}
-                              setResetEditCard={setResetEditCard}
-                              newCardAdded={newCardAdded}
-                              setNewCardAdded={setNewCardAdded}
-                            />
-                          </div>
-                        )}
-                      </Draggable>
-                    </main>
-                  ))}
-                  {provided.placeholder}
-                </BoardsArea>
-              </div>
-            )}
-          </Droppable>
-        </BoardsWrapper>
-      </div>
-    </DragDropContext>
+                        resetEditCard={resetEditCard}
+                        setResetEditCard={setResetEditCard}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+        <IWorkTrashBin trashBinShow={trashBinShow} />
+      </DragDropContext>
+      <p className="copy">
+        <a href="https://nykim.work" target="_blank" rel="noreferrer">
+          Nana
+        </a>
+        &nbsp;with&nbsp;
+        <a href="https://nomadcoders.co/" target="_blank" rel="noreferrer">
+          Nomad Coders
+        </a>
+      </p>
+    </MainWrapper>
   );
 };
 
 export default Main;
+
+const MainWrapper = styled.div`
+  padding: 3rem;
+
+  .copy {
+    width: 100%;
+    margin-top: 8rem;
+    text-align: center;
+    color: #aaa;
+    font-size: 1.3rem;
+
+    a {
+      color: inherit;
+
+      &:hover {
+        color: #111;
+      }
+    }
+  }
+
+  .boards-wrapper {
+    display: flex;
+    overflow-x: auto;
+    padding-bottom: 3rem;
+  }
+  .board-wrap {
+    height: fit-content;
+  }
+`;
 
 const MainTitle = styled.h1`
   width: 100%;
@@ -160,65 +221,3 @@ const MainTitle = styled.h1`
     }
   }
 `;
-
-const BoardsWrapper = styled.div`
-  overflow-x: auto;
-  padding-bottom: 3rem;
-`;
-
-const BoardsArea = styled.div`
-  display: flex;
-  main {
-    height: fit-content;
-  }
-`;
-
-/**
- *
- * 작전타임! (앞으론 샌박에서 만들고 도입해보자..)
- * Context는 하나만 있어도 됨
- * dragglbeId는 "고유"해야 함
- *
-
- - 기존처럼 [보드이름], [{카드내용}] 각자 만들어서 이름으로 매칭할지
- - 아예 하나의 변수로 취급할지
-  [
-    {
-      id: 0
-      title: '보드1'
-      content: [
-        {
-          id: 0,
-          text: '카드 내용1-1'
-        },
-        {
-          id: 1,
-          text: '카드 내용1-2'
-        },
-      ]
-    },
-    {
-      id: 1
-      title: '보드2'
-      content: [
-        {
-          id: 2,
-          text: '카드 내용2-1'
-        },
-        {
-          id: 3,
-          text: '카드 내용2-2'
-        },
-      ]
-    }
-  ]
-
-
-  이런 경우
-  `content: boardFirstContent
-  `boardFirstContent = [];
-  이렇게 연결할 수 있을까?
-
-
-
- */
